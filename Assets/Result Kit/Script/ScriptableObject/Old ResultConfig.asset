@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 14e5004428ea7e84396e1f27c989dca3, type: 3}
-  m_Name: ResultConfig
+  m_Name: Old ResultConfig
   m_EditorClassIdentifier: 
-  oneStar: 0
-  twoStar: 60
-  threeStar: 80
+  oneStar: 40
+  twoStar: 70
+  threeStar: 90
   filledStar: {fileID: 21300000, guid: 7d497899f5031cd4888215e58bb92cd6, type: 3}
   emptyStar: {fileID: 21300000, guid: f9f88dc86111b31499d68b0d04798826, type: 3}
   achievementSprites:
-  - {fileID: 21300000, guid: 88c1bc0d009476a42af0041cba88d332, type: 3}
-  - {fileID: 21300000, guid: 03171458d8f5dc14489f833cab90499b, type: 3}
-  - {fileID: 21300000, guid: e76e15ba9a6acea42b5a3b41e932fd5d, type: 3}
+  - {fileID: 21300000, guid: 9dc81b03bb4a0264a9d107eefb6ee4d0, type: 3}
+  - {fileID: 21300000, guid: 666c72b630db2d94d926e7cf614c6c07, type: 3}
+  - {fileID: 21300000, guid: 5936119f78b03724c94d29c84606f090, type: 3}

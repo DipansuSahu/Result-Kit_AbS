@@ -7,6 +7,24 @@ using UnityEngine.UI;
 namespace ResultKit.AbS
 {
     /// <summary>
+    /// Defines how achievements are displayed on the result screen.
+    /// </summary>
+    public enum AchievementDisplayMode
+    {
+        /// <summary>
+        /// Classic mode: fills 1, 2, or 3 star images using filledStar / emptyStar sprites from config.
+        /// </summary>
+        StarFill,
+
+        /// <summary>
+        /// Badge mode: shows a single achievement sprite from <see cref="ResultConfig.achievementSprites"/>
+        /// (index 0 = bronze / 1-star tier, 1 = silver / 2-star tier, 2 = gold / 3-star tier)
+        /// and also updates scoreIconImage to match.
+        /// </summary>
+        BadgeSprite
+    }
+
+    /// <summary>
     /// Core Result System responsible for:
     /// - Collecting question results
     /// - Calculating score
@@ -25,17 +43,25 @@ namespace ResultKit.AbS
         [Header("Config")]
         [SerializeField] private ResultConfig config;
 
+        [Header("Achievement Display")]
+        [Tooltip("StarFill  – fills 1/2/3 star images using filledStar/emptyStar from ResultConfig (classic).\n" +
+                 "BadgeSprite – picks one sprite from ResultConfig.achievementSprites and updates scoreIconImage.")]
+        [SerializeField] private AchievementDisplayMode achievementDisplayMode = AchievementDisplayMode.StarFill;
+
         [Header("Screen")]
         [SerializeField] private GameObject resultScreen;
 
-        [Header("Stats UI")]
+        [Header("Stats Text")]
         [SerializeField] private TMP_Text scoreText;
         [SerializeField] private TMP_Text timeTakenText;
         [SerializeField] private TMP_Text correctText;
         [SerializeField] private TMP_Text incorrectText;
 
-        [Header("Stars")]
-        [SerializeField] private Image[] starImages;
+        [Header("Stats UI")]
+        [SerializeField] private Image scoreIconImage;
+
+        [Header("Achievement Images")]
+        [SerializeField] private Image[] achievementImages;
 
         [Header("Question Panels")]
         [SerializeField] private Transform panelParent;
@@ -178,7 +204,7 @@ namespace ResultKit.AbS
             else
                 ShowAssessmentResult();
 
-            ApplyStars(summary.ScorePercentage);
+            ApplyAchievement(summary.ScorePercentage);
 
             resultScreen.SetActive(true);
 
@@ -232,9 +258,29 @@ namespace ResultKit.AbS
             }
         }
 
-        private void ApplyStars(float pct)
+        /// <summary>
+        /// Routes achievement display to the correct method based on <see cref="achievementDisplayMode"/>.
+        /// </summary>
+        private void ApplyAchievement(float pct)
         {
-            if (starImages == null || config == null)
+            switch (achievementDisplayMode)
+            {
+                case AchievementDisplayMode.StarFill:
+                    ApplyStarFill(pct);
+                    break;
+
+                case AchievementDisplayMode.BadgeSprite:
+                    ApplyBadgeSprite(pct);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Classic mode: fills 1 / 2 / 3 star images using filledStar / emptyStar from config.
+        /// </summary>
+        private void ApplyStarFill(float pct)
+        {
+            if (achievementImages == null || config == null)
                 return;
 
             bool[] filled =
@@ -244,13 +290,53 @@ namespace ResultKit.AbS
                 pct > config.threeStar
             };
 
-            for (int i = 0; i < starImages.Length && i < filled.Length; i++)
+            for (int i = 0; i < achievementImages.Length && i < filled.Length; i++)
             {
-                starImages[i].sprite =
+                achievementImages[i].sprite =
                     filled[i] ? config.filledStar : config.emptyStar;
 
-                starImages[i].gameObject.SetActive(true);
+                achievementImages[i].gameObject.SetActive(true);
             }
+        }
+
+        /// <summary>
+        /// Badge mode: resolves a tier index (0 / 1 / 2) from the score percentage,
+        /// sets every achievementImage to the matching sprite from config.achievementSprites,
+        /// and also updates scoreIconImage.
+        /// </summary>
+        private void ApplyBadgeSprite(float pct)
+        {
+            if (config == null || config.achievementSprites == null || config.achievementSprites.Length < 3)
+            {
+                Debug.LogWarning("[ResultSystem] BadgeSprite mode requires 3 sprites assigned in ResultConfig.achievementSprites.");
+                return;
+            }
+
+            // Resolve tier: 2 = gold (3-star), 1 = silver (2-star), 0 = bronze (1-star)
+            int tierIndex;
+            if (pct > config.threeStar)
+                tierIndex = 2;
+            else if (pct > config.twoStar)
+                tierIndex = 1;
+            else
+                tierIndex = 0;
+
+            Sprite badgeSprite = config.achievementSprites[tierIndex];
+
+            // Update all achievement images
+            if (achievementImages != null)
+            {
+                foreach (Image img in achievementImages)
+                {
+                    if (img == null) continue;
+                    img.sprite = badgeSprite;
+                    img.gameObject.SetActive(true);
+                }
+            }
+
+            // Update score icon
+            if (scoreIconImage != null)
+                scoreIconImage.sprite = badgeSprite;
         }
 
         #endregion UI Building
