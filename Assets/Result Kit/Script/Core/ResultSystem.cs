@@ -42,6 +42,9 @@ namespace ResultKit.AbS
 
         [Header("Config")]
         [SerializeField] private ResultConfig config;
+        public bool showMissedCount; // Whether to display the count of missed/skipped questions in the result summary.
+        public int keepInScrolview = 2; // Number of "question panels/ui objects" to keep in the scroll view before recycling.
+        public int keepInScrolviewAssessment = 1; // Number of "question panels/ui objects" to keep in the scroll view before recycling in assessment mode.
 
         [Header("Achievement Display")]
         [Tooltip("StarFill  – fills 1/2/3 star images using filledStar/emptyStar from ResultConfig (classic).\n" +
@@ -50,11 +53,13 @@ namespace ResultKit.AbS
 
         [Header("Screen")]
         [SerializeField] private GameObject resultScreen;
+        [SerializeField] private GameObject assessmentResultScreen;
 
         [Header("Stats Text")]
         [SerializeField] private TMP_Text scoreText;
         [SerializeField] private TMP_Text timeTakenText;
         [SerializeField] private TMP_Text correctText;
+        [SerializeField] private TMP_Text missedText;
         [SerializeField] private TMP_Text incorrectText;
 
         [Header("Stats UI")]
@@ -127,11 +132,7 @@ namespace ResultKit.AbS
         /// <summary>
         /// Add result after each question.
         /// </summary>
-        public void AddQuestionResult(
-            int questionNo,
-            string question,
-            string selected,
-            string correct)
+        public void AddQuestionResult(int questionNo, string question, string selected, string correct)
         {
             bool missed = string.IsNullOrEmpty(selected);
             bool isCorrect = !missed && selected == correct;
@@ -167,11 +168,7 @@ namespace ResultKit.AbS
         /// <summary>
         /// Call this when the game finishes.
         /// </summary>
-        public void ShowFinalResult(
-            int maxScore,
-            float timeTaken,
-            int totalQuestions,
-            bool isAssessment = false)
+        public void ShowFinalResult(int maxScore, float timeTaken, int totalQuestions, bool isAssessment = false)
         {
             ResultSummary summary = new ResultSummary
             {
@@ -200,13 +197,22 @@ namespace ResultKit.AbS
         private void ShowResult(ResultSummary summary, bool isAssessment = false)
         {
             if (!isAssessment)
+            {
                 ShowDetailedResult(summary);
+                resultScreen.SetActive(true); // Show the result screen
+            }
             else
-                ShowAssessmentResult();
+            {
+                if (assessmentResultScreen)
+                    assessmentResultScreen.SetActive(true); // Show the assessment result screen
+                else
+                {
+                    ShowAssessmentResult();
+                    resultScreen.SetActive(true); // Show the result screen
+                }
+            }
 
             ApplyAchievement(summary.ScorePercentage);
-
-            resultScreen.SetActive(true);
 
             OnResultShown?.Invoke(summary);
         }
@@ -223,14 +229,22 @@ namespace ResultKit.AbS
                 correctText.text = $"{s.CorrectCount}/{s.totalQuestions}";
 
             if (incorrectText)
-                incorrectText.text = $"{s.IncorrectCount}/{s.totalQuestions}";
+            {
+                if (showMissedCount) // If showing missed count, only show incorrect count (excluding missed) in the incorrectText.
+                    incorrectText.text = $"{s.IncorrectCount}/{s.totalQuestions}";
+                else // If not showing missed count, show total incorrect + missed in the incorrectText.
+                    incorrectText.text = $"{s.IncorrectCount + s.MissedCount}/{s.totalQuestions}";
+            }
 
-            RebuildPanels(s.results);
+            if (missedText && showMissedCount)
+                missedText.text = $"{s.MissedCount}/{s.totalQuestions}";
+
+            RebuildPanels(s.results, keepInScrolview);
         }
 
         private void ShowAssessmentResult()
         {
-            RebuildPanels(null);
+            RebuildPanels(null, keepInScrolviewAssessment);
 
             if (assessmentTitlePrefab && panelParent)
                 Instantiate(assessmentTitlePrefab, panelParent);
@@ -240,12 +254,12 @@ namespace ResultKit.AbS
 
         #region UI Building
 
-        private void RebuildPanels(List<QuestionResult> results)
+        private void RebuildPanels(List<QuestionResult> results, int keepInScrolview = 2)
         {
             if (!panelParent)
                 return;
 
-            for (int i = panelParent.childCount - 1; i >= 2; i--)
+            for (int i = panelParent.childCount - 1; i >= keepInScrolview; i--)
                 Destroy(panelParent.GetChild(i).gameObject);
 
             if (results == null)

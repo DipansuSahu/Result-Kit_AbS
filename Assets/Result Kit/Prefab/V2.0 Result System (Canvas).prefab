@@ -2479,11 +2479,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   config: {fileID: 11400000, guid: bde382a8c8969a542afd79d85d92ecd0, type: 2}
+  showMissedCount: 0
+  keepInScrolview: 2
+  keepInScrolviewAssessment: 1
   achievementDisplayMode: 1
   resultScreen: {fileID: 8885213703505139428}
+  assessmentResultScreen: {fileID: 0}
   scoreText: {fileID: 53920200462596468}
   timeTakenText: {fileID: 9078436353545249962}
   correctText: {fileID: 8723840289481233426}
+  missedText: {fileID: 0}
   incorrectText: {fileID: 4033603850176749298}
   scoreIconImage: {fileID: 5807991510160692329}
   achievementImages:

@@ -34,7 +34,8 @@ public class ResultKitExample : MonoBehaviour
         ResultSystem.Instance.ShowFinalResult(
             maxScore: 30,
             timeTaken: 150,
-            totalQuestions: 3
+            totalQuestions: 3,
+            isAssessment: false
         );
     }
 }

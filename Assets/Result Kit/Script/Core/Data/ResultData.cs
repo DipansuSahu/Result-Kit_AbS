@@ -39,7 +39,10 @@ namespace ResultKit.AbS
         public int CorrectCount => results.FindAll(r => r.isCorrect).Count;
 
         /// <summary>Total incorrect answers.</summary>
-        public int IncorrectCount => totalQuestions - CorrectCount;
+        public int IncorrectCount => totalQuestions - CorrectCount - MissedCount;
+
+        /// <summary>Total missed/skipped questions.</summary>
+        public int MissedCount => results.FindAll(r => r.isMissed).Count;
 
         /// <summary>Score percentage for star rating.</summary>
         public float ScorePercentage =>
